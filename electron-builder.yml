@@ -1,0 +1,37 @@
+appId: com.babaobox.app
+productName: 八宝盒
+directories:
+  buildResources: build
+  output: dist
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.*'
+  - '!{.eslintignore,eslint.config.mjs,.prettierignore,.prettierrc.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asarUnpack:
+  - resources/**
+win:
+  executableName: babao-box
+  target:
+    - nsis
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+mac:
+  target:
+    - dmg
+    - zip
+  artifactName: ${name}-${version}-mac.${ext}
+  notarize: false
+linux:
+  target:
+    - AppImage
+    - deb
+  maintainer: babaobox
+  category: Utility
+  artifactName: ${name}-${version}-linux.${ext}
