@@ -13,6 +13,7 @@
     "build:win": "pnpm build && electron-builder --win --publish never",
     "build:mac": "pnpm build && electron-builder --mac --publish never",
     "build:linux": "pnpm build && electron-builder --linux --publish never",
+    "release": "node scripts/release.mjs",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx --fix",
     "prepare": "husky"
