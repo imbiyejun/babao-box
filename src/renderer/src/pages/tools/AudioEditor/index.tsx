@@ -1,12 +1,20 @@
 import { useState, useRef, useCallback } from 'react'
-import { Layout, Button, Space, Typography, message } from 'antd'
+import { Layout, Button, Space, Typography, message, Select } from 'antd'
 import { ArrowLeftOutlined, FolderOpenOutlined, SaveOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import type WaveSurfer from 'wavesurfer.js'
 import Waveform from './Waveform'
 import type { WaveformRef } from './Waveform'
 import Controls from './Controls'
-import { trimAudioBuffer, audioBufferToWav } from '@/utils/audio'
+import type { AudioExportFormatId } from '@/types/audio-export'
+import { trimAudioBuffer } from '@/utils/audio'
+import { encodeAudioBufferForExport } from '@/utils/audioEncodeExport'
+import {
+  DEFAULT_EXPORT_FORMAT,
+  EXPORT_FORMAT_SELECT_OPTIONS,
+  defaultTrimmedSaveName,
+  exportSaveDialogFilters
+} from './audioExportOptions'
 
 const { Header, Content } = Layout
 const { Text } = Typography
@@ -27,6 +35,7 @@ function AudioEditor(): React.ReactElement {
   const [duration, setDuration] = useState(0)
   const [region, setRegion] = useState<RegionRange>({ start: 0, end: 0 })
   const [loading, setLoading] = useState(false)
+  const [exportFormat, setExportFormat] = useState<AudioExportFormatId>(DEFAULT_EXPORT_FORMAT)
 
   const loadFile = useCallback(
     async (path: string, name: string) => {
@@ -68,22 +77,26 @@ function AudioEditor(): React.ReactElement {
       return
     }
 
-    const baseName = fileName.replace(/\.[^.]+$/, '')
-    const result = await window.electronAPI.saveFileDialog(`${baseName}_trimmed.wav`)
+    const stem = fileName.replace(/\.[^.]+$/, '')
+    const suggestedName = defaultTrimmedSaveName(stem, exportFormat)
+    const result = await window.electronAPI.saveFileDialog(
+      suggestedName,
+      exportSaveDialogFilters()
+    )
     if (result.canceled || !result.filePath) return
 
     setLoading(true)
     try {
       const trimmed = trimAudioBuffer(decodedData, region.start, region.end)
-      const wavData = audioBufferToWav(trimmed)
-      await window.electronAPI.writeFile(result.filePath, wavData)
+      const outData = encodeAudioBufferForExport(trimmed, exportFormat)
+      await window.electronAPI.writeFile(result.filePath, outData)
       message.success('保存成功')
     } catch (err) {
       message.error('保存失败: ' + (err instanceof Error ? err.message : String(err)))
     } finally {
       setLoading(false)
     }
-  }, [fileName, region])
+  }, [exportFormat, fileName, region])
 
   const handleWsReady = useCallback((ws: WaveSurfer) => {
     wsRef.current = ws
@@ -142,10 +155,20 @@ function AudioEditor(): React.ReactElement {
             </Text>
           )}
         </Space>
-        <Space>
+        <Space align="center">
           <Button icon={<FolderOpenOutlined />} onClick={handleOpenFile}>
             打开文件
           </Button>
+          <Space size={4}>
+            <Text type="secondary">输出格式</Text>
+            <Select<AudioExportFormatId>
+              value={exportFormat}
+              onChange={setExportFormat}
+              options={EXPORT_FORMAT_SELECT_OPTIONS}
+              style={{ width: 100 }}
+              disabled={!audioUrl}
+            />
+          </Space>
           <Button
             type="primary"
             icon={<SaveOutlined />}

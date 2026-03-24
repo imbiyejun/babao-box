@@ -17,13 +17,19 @@ export function registerDialogHandlers(): void {
     }
   )
 
-  ipcMain.handle('dialog:saveFile', async (_event, defaultPath?: string) => {
-    return dialog.showSaveDialog({
-      defaultPath,
-      filters: [
-        { name: 'WAV Audio', extensions: ['wav'] },
-        { name: 'All Files', extensions: ['*'] }
-      ]
-    })
-  })
+  ipcMain.handle(
+    'dialog:saveFile',
+    async (_event, defaultPath?: string, filters?: Electron.FileFilter[]) => {
+      return dialog.showSaveDialog({
+        defaultPath,
+        filters:
+          filters && filters.length > 0
+            ? filters
+            : [
+                { name: 'WAV Audio', extensions: ['wav'] },
+                { name: 'All Files', extensions: ['*'] }
+              ]
+      })
+    }
+  )
 }
