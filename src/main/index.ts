@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { registerDialogHandlers } from './ipc/dialog'
 import { registerFileHandlers } from './ipc/file'
+import { registerNcmHandlers } from './ipc/ncm'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -38,6 +39,7 @@ function createWindow(): void {
 app.whenReady().then(() => {
   registerDialogHandlers()
   registerFileHandlers()
+  registerNcmHandlers()
   createWindow()
 
   app.on('activate', () => {

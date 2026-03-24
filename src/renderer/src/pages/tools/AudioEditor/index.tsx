@@ -37,29 +37,51 @@ function AudioEditor(): React.ReactElement {
   const [loading, setLoading] = useState(false)
   const [exportFormat, setExportFormat] = useState<AudioExportFormatId>(DEFAULT_EXPORT_FORMAT)
 
+  const loadAudioBuffer = useCallback(
+    (buffer: ArrayBuffer, name: string) => {
+      const blob = new Blob([buffer])
+      const url = URL.createObjectURL(blob)
+      if (audioUrl) URL.revokeObjectURL(audioUrl)
+      setAudioUrl(url)
+      setFileName(name)
+      setCurrentTime(0)
+      setIsPlaying(false)
+    },
+    [audioUrl]
+  )
+
+  const isNcmFile = (name: string): boolean => /\.ncm$/i.test(name)
+
   const loadFile = useCallback(
     async (path: string, name: string) => {
       setLoading(true)
       try {
-        const buffer = await window.electronAPI.readFile(path)
-        const blob = new Blob([buffer])
-        const url = URL.createObjectURL(blob)
-        if (audioUrl) URL.revokeObjectURL(audioUrl)
-        setAudioUrl(url)
-        setFileName(name)
-        setCurrentTime(0)
-        setIsPlaying(false)
+        if (isNcmFile(name)) {
+          const { audioData, format } = await window.electronAPI.decryptNcm(path)
+          const displayName = name.replace(/\.ncm$/i, `.${format}`)
+          loadAudioBuffer(audioData, displayName)
+        } else {
+          const buffer = await window.electronAPI.readFile(path)
+          loadAudioBuffer(buffer, name)
+        }
       } catch (err) {
         message.error('文件加载失败: ' + (err instanceof Error ? err.message : String(err)))
       } finally {
         setLoading(false)
       }
     },
-    [audioUrl]
+    [loadAudioBuffer]
   )
 
   const handleOpenFile = useCallback(async () => {
-    const result = await window.electronAPI.openFileDialog()
+    const result = await window.electronAPI.openFileDialog([
+      {
+        name: 'Audio Files',
+        extensions: ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'wma', 'ncm']
+      },
+      { name: 'NCM Files', extensions: ['ncm'] },
+      { name: 'All Files', extensions: ['*'] }
+    ])
     if (!result.canceled && result.filePaths.length > 0) {
       const fp = result.filePaths[0]
       const name = fp.split(/[/\\]/).pop() || ''
@@ -207,7 +229,7 @@ function AudioEditor(): React.ReactElement {
               点击选择或拖拽音频文件到此处
             </Text>
             <Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
-              支持 MP3, WAV, OGG, FLAC, AAC, M4A 等格式
+              支持 MP3, WAV, OGG, FLAC, AAC, M4A, NCM 等格式
             </Text>
           </div>
         ) : (
