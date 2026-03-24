@@ -33,6 +33,15 @@ export interface WatermarkOptions {
 
 export type ImageFormatId = 'png' | 'jpeg' | 'webp'
 
+export interface SelectionRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export type InpaintMethod = 'interpolate' | 'blur' | 'combined'
+
 export interface LoadedImage {
   element: HTMLImageElement
   fileName: string

@@ -1,4 +1,4 @@
-import type { CropPreset, ImageFormatId, WatermarkPosition } from '@/types/image-process'
+import type { CropPreset, ImageFormatId, InpaintMethod, WatermarkPosition } from '@/types/image-process'
 
 // 300 DPI standard photo sizes
 export const CROP_PRESETS: CropPreset[] = [
@@ -39,6 +39,12 @@ export function imageSaveFilters(format: ImageFormatId): Electron.FileFilter[] {
   }
   return [map[format], { name: '所有文件', extensions: ['*'] }]
 }
+
+export const INPAINT_METHOD_OPTIONS: { label: string; value: InpaintMethod }[] = [
+  { label: '智能填充 (推荐)', value: 'combined' },
+  { label: '边缘插值', value: 'interpolate' },
+  { label: '模糊覆盖', value: 'blur' }
+]
 
 export function defaultSaveName(stem: string, suffix: string, format: ImageFormatId): string {
   const ext = format === 'jpeg' ? 'jpg' : format

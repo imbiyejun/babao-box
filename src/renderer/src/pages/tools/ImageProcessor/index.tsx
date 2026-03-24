@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useImageFile } from './hooks/useImageFile'
 import ImageCrop from './components/ImageCrop'
 import ImageWatermark from './components/ImageWatermark'
+import ImageRemoveWatermark from './components/ImageRemoveWatermark'
 import ImageCompress from './components/ImageCompress'
 import ImageConvert from './components/ImageConvert'
 
@@ -23,6 +24,7 @@ function ImageProcessor(): React.ReactElement {
     ? [
         { key: 'crop', label: '图片剪裁', children: <ImageCrop imageData={imageData} /> },
         { key: 'watermark', label: '图片水印', children: <ImageWatermark imageData={imageData} /> },
+        { key: 'remove-watermark', label: '去除水印', children: <ImageRemoveWatermark imageData={imageData} /> },
         { key: 'compress', label: '图片压缩', children: <ImageCompress imageData={imageData} /> },
         { key: 'convert', label: '格式转换', children: <ImageConvert imageData={imageData} /> }
       ]
