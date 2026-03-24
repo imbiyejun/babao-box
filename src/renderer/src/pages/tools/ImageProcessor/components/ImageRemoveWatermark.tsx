@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { Button, Select, Card, Space, Typography, List, message, Divider, Switch } from 'antd'
 import { SaveOutlined, DeleteOutlined, ClearOutlined, EyeOutlined } from '@ant-design/icons'
 import type { SelectionRect, InpaintMethod, ImageFormatId, LoadedImage } from '@/types/image-process'
@@ -8,7 +8,7 @@ import {
   imageSaveFilters,
   defaultSaveName
 } from '../constants'
-import { inpaintRegions, inpaintToArrayBuffer } from '../utils/inpaint'
+import { inpaintPreview, inpaintToArrayBuffer } from '../utils/inpaint'
 import SelectionCanvas from './SelectionCanvas'
 
 const { Text } = Typography
@@ -26,7 +26,9 @@ export default function ImageRemoveWatermark({ imageData }: ImageRemoveWatermark
   const [quality, setQuality] = useState(92)
   const [previewing, setPreviewing] = useState(false)
   const [previewData, setPreviewData] = useState<ImageData | null>(null)
+  const [processing, setProcessing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const previewTimerRef = useRef<number>(0)
 
   const handleAddSelection = useCallback((rect: SelectionRect) => {
     setSelections((prev) => [...prev, rect])
@@ -46,21 +48,26 @@ export default function ImageRemoveWatermark({ imageData }: ImageRemoveWatermark
     setPreviewing(false)
   }, [])
 
+  useEffect(() => {
+    return () => clearTimeout(previewTimerRef.current)
+  }, [])
+
   const handlePreviewToggle = useCallback(
     (checked: boolean) => {
+      clearTimeout(previewTimerRef.current)
       if (checked && selections.length > 0) {
-        const canvas = document.createElement('canvas')
-        canvas.width = image.naturalWidth
-        canvas.height = image.naturalHeight
-        const ctx = canvas.getContext('2d')!
-        ctx.drawImage(image, 0, 0)
-        const srcData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const result = inpaintRegions(srcData, selections, method)
-        setPreviewData(result)
-        setPreviewing(true)
+        setProcessing(true)
+        // Yield to let React render loading state before heavy computation
+        previewTimerRef.current = window.setTimeout(() => {
+          const result = inpaintPreview(image, selections, method)
+          setPreviewData(result)
+          setPreviewing(true)
+          setProcessing(false)
+        }, 16)
       } else {
         setPreviewData(null)
         setPreviewing(false)
+        setProcessing(false)
       }
     },
     [image, selections, method]
@@ -216,6 +223,7 @@ export default function ImageRemoveWatermark({ imageData }: ImageRemoveWatermark
         selections={previewing ? [] : selections}
         onAddSelection={handleAddSelection}
         previewImageData={previewData}
+        loading={processing}
       />
     </div>
   )

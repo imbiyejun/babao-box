@@ -1,5 +1,18 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { Button, Input, Slider, Select, Card, Space, Typography, ColorPicker, message, Divider } from 'antd'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import {
+  Button,
+  Input,
+  Slider,
+  Select,
+  Card,
+  Space,
+  Typography,
+  ColorPicker,
+  message,
+  Divider,
+  Tooltip,
+  Tag
+} from 'antd'
 import { SaveOutlined } from '@ant-design/icons'
 import type { WatermarkOptions, ImageFormatId, LoadedImage } from '@/types/image-process'
 import {
@@ -9,6 +22,7 @@ import {
   defaultSaveName
 } from '../constants'
 import { applyWatermark, drawWatermarkOnCtx } from '../utils/imageProcess'
+import { getWatermarkRecommendation } from '../utils/watermarkRecommend'
 
 const { Text } = Typography
 
@@ -34,6 +48,8 @@ export default function ImageWatermark({ imageData }: ImageWatermarkProps): Reac
   const [saving, setSaving] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const recommendation = useMemo(() => getWatermarkRecommendation(image), [image])
 
   const updateOption = useCallback(<K extends keyof WatermarkOptions>(key: K, value: WatermarkOptions[K]) => {
     setOptions((prev) => ({ ...prev, [key]: value }))
@@ -116,7 +132,16 @@ export default function ImageWatermark({ imageData }: ImageWatermarkProps): Reac
           </div>
 
           <div>
-            <Text strong>字体大小</Text>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text strong>字体大小</Text>
+              <Tag
+                color="blue"
+                style={{ cursor: 'pointer', margin: 0 }}
+                onClick={() => updateOption('fontSize', recommendation.fontSize)}
+              >
+                推荐: {recommendation.fontSize}px
+              </Tag>
+            </div>
             <Slider
               min={8}
               max={200}
@@ -125,12 +150,48 @@ export default function ImageWatermark({ imageData }: ImageWatermarkProps): Reac
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Text strong>颜色</Text>
-            <ColorPicker
-              value={options.color}
-              onChange={(_, hex) => updateOption('color', hex)}
-            />
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Text strong>颜色</Text>
+              <ColorPicker
+                value={options.color}
+                onChange={(_, hex) => updateOption('color', hex)}
+              />
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                gap: 6,
+                marginTop: 8,
+                flexWrap: 'wrap',
+                alignItems: 'center'
+              }}
+            >
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                推荐:
+              </Text>
+              {recommendation.colors.map((c) => (
+                <Tooltip key={c.color} title={c.label}>
+                  <div
+                    onClick={() => updateOption('color', c.color)}
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 4,
+                      backgroundColor: c.color,
+                      border:
+                        options.color === c.color
+                          ? '2px solid #1677ff'
+                          : '1px solid rgba(255, 255, 255, 0.25)',
+                      cursor: 'pointer',
+                      transition: 'transform 0.15s'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                  />
+                </Tooltip>
+              ))}
+            </div>
           </div>
 
           <div>

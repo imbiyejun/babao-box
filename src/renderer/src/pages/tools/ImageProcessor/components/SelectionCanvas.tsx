@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback } from 'react'
+import { Spin } from 'antd'
 import type { SelectionRect } from '@/types/image-process'
 
 interface SelectionCanvasProps {
@@ -6,6 +7,7 @@ interface SelectionCanvasProps {
   selections: SelectionRect[]
   onAddSelection: (rect: SelectionRect) => void
   previewImageData: ImageData | null
+  loading?: boolean
 }
 
 interface ScaleInfo {
@@ -33,7 +35,8 @@ export default function SelectionCanvas({
   image,
   selections,
   onAddSelection,
-  previewImageData
+  previewImageData,
+  loading = false
 }: SelectionCanvasProps): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -45,6 +48,10 @@ export default function SelectionCanvas({
     curX: 0,
     curY: 0
   })
+
+  // Cache converted preview canvas to avoid recreation on every draw call
+  const previewCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const lastPreviewDataRef = useRef<ImageData | null>(null)
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current
@@ -59,12 +66,15 @@ export default function SelectionCanvas({
     const s = scaleRef.current
 
     if (previewImageData) {
-      // Draw preview result scaled to canvas
-      const tmpCanvas = document.createElement('canvas')
-      tmpCanvas.width = previewImageData.width
-      tmpCanvas.height = previewImageData.height
-      tmpCanvas.getContext('2d')!.putImageData(previewImageData, 0, 0)
-      ctx.drawImage(tmpCanvas, s.offsetX, s.offsetY, s.displayW, s.displayH)
+      if (previewImageData !== lastPreviewDataRef.current) {
+        const tmp = document.createElement('canvas')
+        tmp.width = previewImageData.width
+        tmp.height = previewImageData.height
+        tmp.getContext('2d')!.putImageData(previewImageData, 0, 0)
+        previewCanvasRef.current = tmp
+        lastPreviewDataRef.current = previewImageData
+      }
+      ctx.drawImage(previewCanvasRef.current!, s.offsetX, s.offsetY, s.displayW, s.displayH)
     } else {
       ctx.drawImage(image, s.offsetX, s.offsetY, s.displayW, s.displayH)
     }
@@ -182,12 +192,28 @@ export default function SelectionCanvas({
     >
       <canvas
         ref={canvasRef}
-        style={{ display: 'block', width: '100%', height: '100%', cursor: 'crosshair' }}
+        style={{ display: 'block', width: '100%', height: '100%', cursor: loading ? 'wait' : 'crosshair' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       />
+      {loading && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0, 0, 0, 0.45)',
+            borderRadius: 8,
+            zIndex: 10
+          }}
+        >
+          <Spin size="large" />
+        </div>
+      )}
     </div>
   )
 }

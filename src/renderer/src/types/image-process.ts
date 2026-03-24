@@ -42,6 +42,16 @@ export interface SelectionRect {
 
 export type InpaintMethod = 'interpolate' | 'blur' | 'combined'
 
+export interface RecommendedColor {
+  color: string
+  label: string
+}
+
+export interface WatermarkRecommendation {
+  colors: RecommendedColor[]
+  fontSize: number
+}
+
 export interface LoadedImage {
   element: HTMLImageElement
   fileName: string

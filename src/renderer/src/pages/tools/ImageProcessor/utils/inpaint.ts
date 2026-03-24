@@ -142,6 +142,40 @@ function boxBlurRegion(imageData: ImageData, rect: SelectionRect, passes: number
   }
 }
 
+const PREVIEW_MAX_DIM = 1024
+
+/**
+ * Downscale image, inpaint, then return smaller ImageData for preview.
+ * Avoids full-resolution computation when only display-size output is needed.
+ */
+export function inpaintPreview(
+  image: HTMLImageElement,
+  regions: SelectionRect[],
+  method: InpaintMethod
+): ImageData {
+  const { naturalWidth: nw, naturalHeight: nh } = image
+  const scale = Math.min(1, PREVIEW_MAX_DIM / Math.max(nw, nh))
+  const w = Math.round(nw * scale)
+  const h = Math.round(nh * scale)
+
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(image, 0, 0, w, h)
+
+  const srcData = ctx.getImageData(0, 0, w, h)
+
+  const scaledRegions: SelectionRect[] = regions.map((r) => ({
+    x: Math.round(r.x * scale),
+    y: Math.round(r.y * scale),
+    width: Math.round(r.width * scale),
+    height: Math.round(r.height * scale)
+  }))
+
+  return inpaintRegions(srcData, scaledRegions, method)
+}
+
 // Render inpainted result onto a full-size canvas and return as ArrayBuffer
 export async function inpaintToArrayBuffer(
   image: HTMLImageElement,
