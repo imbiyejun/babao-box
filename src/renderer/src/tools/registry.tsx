@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ScissorOutlined } from '@ant-design/icons'
+import { ScissorOutlined, PictureOutlined } from '@ant-design/icons'
 import type { ToolDefinition } from '../types/tool'
 
 // Extensible tool registry: add new tools by appending entries
@@ -11,5 +11,13 @@ export const tools: ToolDefinition[] = [
     icon: <ScissorOutlined />,
     path: '/tools/audio-editor',
     component: lazy(() => import('../pages/tools/AudioEditor'))
+  },
+  {
+    id: 'image-processor',
+    name: '图片处理',
+    description: '剪裁、水印、压缩、格式转换',
+    icon: <PictureOutlined />,
+    path: '/tools/image-processor',
+    component: lazy(() => import('../pages/tools/ImageProcessor'))
   }
 ]
