@@ -6,12 +6,15 @@ import type WaveSurfer from 'wavesurfer.js'
 import Waveform from './Waveform'
 import type { WaveformRef } from './Waveform'
 import Controls from './Controls'
-import type { AudioExportFormatId } from '@/types/audio-export'
+import type { AudioExportFormatId, AudioExportQuality, Mp3Bitrate, WavBitDepth } from '@/types/audio-export'
 import { trimAudioBuffer } from '@/utils/audio'
 import { encodeAudioBufferForExport } from '@/utils/audioEncodeExport'
 import {
   DEFAULT_EXPORT_FORMAT,
+  DEFAULT_EXPORT_QUALITY,
   EXPORT_FORMAT_SELECT_OPTIONS,
+  MP3_BITRATE_OPTIONS,
+  WAV_BIT_DEPTH_OPTIONS,
   defaultTrimmedSaveName,
   exportSaveDialogFilters
 } from './audioExportOptions'
@@ -36,6 +39,7 @@ function AudioEditor(): React.ReactElement {
   const [region, setRegion] = useState<RegionRange>({ start: 0, end: 0 })
   const [loading, setLoading] = useState(false)
   const [exportFormat, setExportFormat] = useState<AudioExportFormatId>(DEFAULT_EXPORT_FORMAT)
+  const [exportQuality, setExportQuality] = useState<AudioExportQuality>(DEFAULT_EXPORT_QUALITY)
 
   const loadAudioBuffer = useCallback(
     (buffer: ArrayBuffer, name: string) => {
@@ -110,7 +114,7 @@ function AudioEditor(): React.ReactElement {
     setLoading(true)
     try {
       const trimmed = trimAudioBuffer(decodedData, region.start, region.end)
-      const outData = encodeAudioBufferForExport(trimmed, exportFormat)
+      const outData = encodeAudioBufferForExport(trimmed, exportFormat, exportQuality)
       await window.electronAPI.writeFile(result.filePath, outData)
       message.success('保存成功')
     } catch (err) {
@@ -118,7 +122,7 @@ function AudioEditor(): React.ReactElement {
     } finally {
       setLoading(false)
     }
-  }, [exportFormat, fileName, region])
+  }, [exportFormat, exportQuality, fileName, region])
 
   const handleWsReady = useCallback((ws: WaveSurfer) => {
     wsRef.current = ws
@@ -190,6 +194,26 @@ function AudioEditor(): React.ReactElement {
               style={{ width: 100 }}
               disabled={!audioUrl}
             />
+          </Space>
+          <Space size={4}>
+            <Text type="secondary">音质</Text>
+            {exportFormat === 'mp3' ? (
+              <Select<Mp3Bitrate>
+                value={exportQuality.mp3Bitrate}
+                onChange={(v) => setExportQuality((prev) => ({ ...prev, mp3Bitrate: v }))}
+                options={MP3_BITRATE_OPTIONS}
+                style={{ width: 180 }}
+                disabled={!audioUrl}
+              />
+            ) : (
+              <Select<WavBitDepth>
+                value={exportQuality.wavBitDepth}
+                onChange={(v) => setExportQuality((prev) => ({ ...prev, wavBitDepth: v }))}
+                options={WAV_BIT_DEPTH_OPTIONS}
+                style={{ width: 180 }}
+                disabled={!audioUrl}
+              />
+            )}
           </Space>
           <Button
             type="primary"

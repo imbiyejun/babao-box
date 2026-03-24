@@ -1,3 +1,5 @@
+import type { WavBitDepth } from '@/types/audio-export'
+
 /**
  * Trim an AudioBuffer to the specified time range.
  * Returns a new AudioBuffer containing only the selected portion.
@@ -26,18 +28,23 @@ export function trimAudioBuffer(
   return trimmed
 }
 
+// WAV format tags: 1 = PCM integer, 3 = IEEE float
+const WAV_FORMAT_PCM = 1
+const WAV_FORMAT_FLOAT = 3
+
 /**
- * Encode an AudioBuffer to WAV format (16-bit PCM).
- * Returns the raw ArrayBuffer of the WAV file.
+ * Encode an AudioBuffer to WAV format.
+ * Supports 16-bit PCM, 24-bit PCM, and 32-bit IEEE float.
  */
-export function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
+export function audioBufferToWav(buffer: AudioBuffer, bitDepth: WavBitDepth = 16): ArrayBuffer {
   const { numberOfChannels, sampleRate, length } = buffer
-  const bitsPerSample = 16
+  const bitsPerSample = bitDepth
   const bytesPerSample = bitsPerSample / 8
   const blockAlign = numberOfChannels * bytesPerSample
   const dataLength = length * blockAlign
   const headerLength = 44
   const totalLength = headerLength + dataLength
+  const formatTag = bitDepth === 32 ? WAV_FORMAT_FLOAT : WAV_FORMAT_PCM
 
   const arrayBuffer = new ArrayBuffer(totalLength)
   const view = new DataView(arrayBuffer)
@@ -48,7 +55,7 @@ export function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
 
   writeString(view, 12, 'fmt ')
   view.setUint32(16, 16, true)
-  view.setUint16(20, 1, true)
+  view.setUint16(20, formatTag, true)
   view.setUint16(22, numberOfChannels, true)
   view.setUint32(24, sampleRate, true)
   view.setUint32(28, sampleRate * blockAlign, true)
@@ -64,15 +71,39 @@ export function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
   }
 
   let offset = headerLength
+  const writeSample = getWavSampleWriter(bitDepth)
   for (let i = 0; i < length; i++) {
     for (let ch = 0; ch < numberOfChannels; ch++) {
-      const sample = Math.max(-1, Math.min(1, channels[ch][i]))
-      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true)
+      writeSample(view, offset, channels[ch][i])
       offset += bytesPerSample
     }
   }
 
   return arrayBuffer
+}
+
+type SampleWriter = (view: DataView, offset: number, sample: number) => void
+
+function getWavSampleWriter(bitDepth: WavBitDepth): SampleWriter {
+  switch (bitDepth) {
+    case 16:
+      return (view, offset, sample) => {
+        const s = Math.max(-1, Math.min(1, sample))
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true)
+      }
+    case 24:
+      return (view, offset, sample) => {
+        const s = Math.max(-1, Math.min(1, sample))
+        const val = s < 0 ? Math.round(s * 0x800000) : Math.round(s * 0x7fffff)
+        view.setUint8(offset, val & 0xff)
+        view.setUint8(offset + 1, (val >> 8) & 0xff)
+        view.setUint8(offset + 2, (val >> 16) & 0xff)
+      }
+    case 32:
+      return (view, offset, sample) => {
+        view.setFloat32(offset, sample, true)
+      }
+  }
 }
 
 function writeString(view: DataView, offset: number, str: string): void {
