@@ -1,6 +1,6 @@
 {
   "name": "babao-box",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "八宝盒 - 实用工具集合",
   "main": "./out/main/index.js",
   "author": "imbiyejun <imbiyejun@163.com>",
