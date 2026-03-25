@@ -15,6 +15,7 @@ export interface ElectronAPI {
   readFile: (filePath: string) => Promise<ArrayBuffer>
   writeFile: (filePath: string, data: ArrayBuffer) => Promise<void>
   decryptNcm: (filePath: string) => Promise<NcmDecryptResult>
+  onShowAbout: (callback: (version: string) => void) => () => void
 }
 
 const electronAPI: ElectronAPI = {
@@ -23,7 +24,16 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.invoke('dialog:saveFile', defaultPath, filters),
   readFile: (filePath) => ipcRenderer.invoke('file:read', filePath),
   writeFile: (filePath, data) => ipcRenderer.invoke('file:write', filePath, data),
-  decryptNcm: (filePath) => ipcRenderer.invoke('ncm:decrypt', filePath)
+  decryptNcm: (filePath) => ipcRenderer.invoke('ncm:decrypt', filePath),
+  onShowAbout: (callback) => {
+    const handler = (_event: Electron.IpcRendererEvent, version: string): void => {
+      callback(version)
+    }
+    ipcRenderer.on('app:showAbout', handler)
+    return () => {
+      ipcRenderer.removeListener('app:showAbout', handler)
+    }
+  }
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

@@ -1,6 +1,6 @@
 import { Tray, Menu, app, BrowserWindow, nativeImage } from 'electron'
 import { join } from 'path'
-import { showAboutDialog } from './about'
+import { showAbout } from './about'
 
 let tray: Tray | null = null
 
@@ -26,7 +26,7 @@ export function createTray(getMainWindow: () => BrowserWindow | null): Tray {
     {
       label: '关于八宝盒',
       click: (): void => {
-        showAboutDialog(getMainWindow())
+        showAbout(getMainWindow())
       }
     },
     { type: 'separator' },

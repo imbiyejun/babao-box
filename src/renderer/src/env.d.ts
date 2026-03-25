@@ -15,6 +15,7 @@ interface ElectronAPI {
   readFile: (filePath: string) => Promise<ArrayBuffer>
   writeFile: (filePath: string, data: ArrayBuffer) => Promise<void>
   decryptNcm: (filePath: string) => Promise<NcmDecryptResult>
+  onShowAbout: (callback: (version: string) => void) => () => void
 }
 
 interface Window {
