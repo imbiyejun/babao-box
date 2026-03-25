@@ -5,8 +5,6 @@ import {
   mergePdfs,
   splitPdf,
   compressPdf,
-  encryptPdf,
-  decryptPdf,
   addWatermark
 } from '../utils/pdfProcess'
 
@@ -53,21 +51,6 @@ export function registerPdfHandlers(): void {
       compressedSize: result.byteLength,
       data: uint8ToArrayBuffer(result)
     }
-  })
-
-  ipcMain.handle(
-    'pdf:encrypt',
-    async (_event, filePath: string, userPassword: string, ownerPassword: string) => {
-      const buf = await readFile(filePath)
-      const result = await encryptPdf(toArrayBuffer(buf), userPassword, ownerPassword)
-      return uint8ToArrayBuffer(result)
-    }
-  )
-
-  ipcMain.handle('pdf:decrypt', async (_event, filePath: string, password: string) => {
-    const buf = await readFile(filePath)
-    const result = await decryptPdf(toArrayBuffer(buf), password)
-    return uint8ToArrayBuffer(result)
   })
 
   ipcMain.handle(

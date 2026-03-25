@@ -23,7 +23,7 @@ export const tools: ToolDefinition[] = [
   {
     id: 'pdf-processor',
     name: 'PDF处理',
-    description: '转图片、转Word、合并、拆分、压缩、加密、解密、水印',
+    description: '转图片、转Word、合并、拆分、压缩、水印',
     icon: <FilePdfOutlined />,
     path: '/tools/pdf-processor',
     component: lazy(() => import('../pages/tools/PdfProcessor'))

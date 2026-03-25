@@ -1,7 +1,6 @@
 export interface PdfInfo {
   pageCount: number
   fileSize: number
-  encrypted: boolean
 }
 
 export interface PdfFileData {
@@ -9,7 +8,6 @@ export interface PdfFileData {
   fileName: string
   pageCount: number
   fileSize: number
-  encrypted: boolean
 }
 
 export interface PdfSplitRange {

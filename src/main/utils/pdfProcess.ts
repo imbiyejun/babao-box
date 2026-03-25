@@ -33,14 +33,14 @@ async function loadCjkFont(): Promise<Uint8Array | null> {
 
 export async function getPdfInfo(
   buffer: ArrayBuffer
-): Promise<{ pageCount: number; fileSize: number; encrypted: boolean }> {
+): Promise<{ pageCount: number; fileSize: number }> {
   try {
     const doc = await PDFDocument.load(buffer)
-    return { pageCount: doc.getPageCount(), fileSize: buffer.byteLength, encrypted: false }
+    return { pageCount: doc.getPageCount(), fileSize: buffer.byteLength }
   } catch {
     try {
       const doc = await PDFDocument.load(buffer, { ignoreEncryption: true })
-      return { pageCount: doc.getPageCount(), fileSize: buffer.byteLength, encrypted: true }
+      return { pageCount: doc.getPageCount(), fileSize: buffer.byteLength }
     } catch {
       throw new Error('无法读取PDF文件')
     }
@@ -92,20 +92,6 @@ export async function compressPdf(buffer: ArrayBuffer): Promise<Uint8Array> {
   return doc.save({ useObjectStreams: true })
 }
 
-// Encrypt via RC4 40-bit (PDF 1.1 standard, widest compatibility)
-export async function encryptPdf(
-  buffer: ArrayBuffer,
-  userPassword: string,
-  ownerPassword: string
-): Promise<Uint8Array> {
-  const { encryptPdfBuffer } = await import('./pdfCrypto')
-  return encryptPdfBuffer(buffer, userPassword, ownerPassword)
-}
-
-export async function decryptPdf(buffer: ArrayBuffer, password: string): Promise<Uint8Array> {
-  const { decryptPdfBuffer } = await import('./pdfCrypto')
-  return decryptPdfBuffer(buffer, password)
-}
 
 export async function addWatermark(
   buffer: ArrayBuffer,

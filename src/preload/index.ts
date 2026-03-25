@@ -9,7 +9,6 @@ export interface NcmDecryptResult {
 export interface PdfInfo {
   pageCount: number
   fileSize: number
-  encrypted: boolean
 }
 
 export interface PdfCompressResult {
@@ -46,12 +45,6 @@ export interface ElectronAPI {
   pdfMerge: (filePaths: string[]) => Promise<ArrayBuffer>
   pdfSplit: (filePath: string, ranges: PdfSplitRange[]) => Promise<ArrayBuffer[]>
   pdfCompress: (filePath: string) => Promise<PdfCompressResult>
-  pdfEncrypt: (
-    filePath: string,
-    userPassword: string,
-    ownerPassword: string
-  ) => Promise<ArrayBuffer>
-  pdfDecrypt: (filePath: string, password: string) => Promise<ArrayBuffer>
   pdfWatermark: (filePath: string, options: PdfWatermarkOptions) => Promise<ArrayBuffer>
   selectPdfFiles: () => Promise<Electron.OpenDialogReturnValue>
   selectDirectory: () => Promise<Electron.OpenDialogReturnValue>
@@ -77,9 +70,6 @@ const electronAPI: ElectronAPI = {
   pdfMerge: (filePaths) => ipcRenderer.invoke('pdf:merge', filePaths),
   pdfSplit: (filePath, ranges) => ipcRenderer.invoke('pdf:split', filePath, ranges),
   pdfCompress: (filePath) => ipcRenderer.invoke('pdf:compress', filePath),
-  pdfEncrypt: (filePath, userPassword, ownerPassword) =>
-    ipcRenderer.invoke('pdf:encrypt', filePath, userPassword, ownerPassword),
-  pdfDecrypt: (filePath, password) => ipcRenderer.invoke('pdf:decrypt', filePath, password),
   pdfWatermark: (filePath, options) => ipcRenderer.invoke('pdf:watermark', filePath, options),
   selectPdfFiles: () => ipcRenderer.invoke('pdf:selectFiles'),
   selectDirectory: () => ipcRenderer.invoke('pdf:selectDirectory')

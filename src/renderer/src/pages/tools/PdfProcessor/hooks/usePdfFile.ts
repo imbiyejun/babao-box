@@ -24,8 +24,7 @@ export function usePdfFile(): {
         filePath,
         fileName,
         pageCount: info.pageCount,
-        fileSize: info.fileSize,
-        encrypted: info.encrypted
+        fileSize: info.fileSize
       })
     } finally {
       setLoading(false)

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Layout, Button, Space, Typography, Tabs, Spin, Tag } from 'antd'
+import { Layout, Button, Space, Typography, Tabs, Spin } from 'antd'
 import { ArrowLeftOutlined, FolderOpenOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { usePdfFile } from './hooks/usePdfFile'
@@ -9,8 +9,6 @@ import PdfToWord from './components/PdfToWord'
 import PdfMerge from './components/PdfMerge'
 import PdfSplit from './components/PdfSplit'
 import PdfCompress from './components/PdfCompress'
-import PdfEncrypt from './components/PdfEncrypt'
-import PdfDecrypt from './components/PdfDecrypt'
 import PdfWatermark from './components/PdfWatermark'
 
 const { Header, Content } = Layout
@@ -27,8 +25,6 @@ function PdfProcessor(): React.ReactElement {
     { key: 'merge', label: 'PDF合并', children: <PdfMerge /> },
     { key: 'split', label: 'PDF拆分', children: <PdfSplit pdfData={pdfData} onOpenPdf={openPdf} onReset={resetPdf} /> },
     { key: 'compress', label: 'PDF压缩', children: <PdfCompress pdfData={pdfData} onOpenPdf={openPdf} onReset={resetPdf} /> },
-    { key: 'encrypt', label: 'PDF加密', children: <PdfEncrypt pdfData={pdfData} onOpenPdf={openPdf} onReset={resetPdf} /> },
-    { key: 'decrypt', label: 'PDF解密', children: <PdfDecrypt pdfData={pdfData} onOpenPdf={openPdf} onReset={resetPdf} /> },
     { key: 'watermark', label: 'PDF水印', children: <PdfWatermark pdfData={pdfData} onOpenPdf={openPdf} onReset={resetPdf} /> }
   ]
 
@@ -55,7 +51,6 @@ function PdfProcessor(): React.ReactElement {
               <Text type="secondary">
                 {pdfData.fileName} · {pdfData.pageCount}页 · {formatFileSize(pdfData.fileSize)}
               </Text>
-              {pdfData.encrypted && <Tag color="orange">已加密</Tag>}
             </Space>
           )}
         </Space>
