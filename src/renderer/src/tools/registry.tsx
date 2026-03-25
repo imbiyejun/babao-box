@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ScissorOutlined, PictureOutlined } from '@ant-design/icons'
+import { ScissorOutlined, PictureOutlined, FilePdfOutlined } from '@ant-design/icons'
 import type { ToolDefinition } from '../types/tool'
 
 // Extensible tool registry: add new tools by appending entries
@@ -19,5 +19,13 @@ export const tools: ToolDefinition[] = [
     icon: <PictureOutlined />,
     path: '/tools/image-processor',
     component: lazy(() => import('../pages/tools/ImageProcessor'))
+  },
+  {
+    id: 'pdf-processor',
+    name: 'PDF处理',
+    description: '转图片、转Word、合并、拆分、压缩、加密、解密、水印',
+    icon: <FilePdfOutlined />,
+    path: '/tools/pdf-processor',
+    component: lazy(() => import('../pages/tools/PdfProcessor'))
   }
 ]

@@ -3,6 +3,7 @@ import { join } from 'path'
 import { registerDialogHandlers } from './ipc/dialog'
 import { registerFileHandlers } from './ipc/file'
 import { registerNcmHandlers } from './ipc/ncm'
+import { registerPdfHandlers } from './ipc/pdf'
 import { createTray, destroyTray } from './tray'
 
 // Single instance lock — focus existing window on second launch
@@ -67,6 +68,7 @@ app.whenReady().then(() => {
   registerDialogHandlers()
   registerFileHandlers()
   registerNcmHandlers()
+  registerPdfHandlers()
 
   createWindow()
   createTray(getMainWindow)
