@@ -1,11 +1,24 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, Menu, shell } from 'electron'
 import { join } from 'path'
 import { registerDialogHandlers } from './ipc/dialog'
 import { registerFileHandlers } from './ipc/file'
 import { registerNcmHandlers } from './ipc/ncm'
+import { createTray, destroyTray } from './tray'
+
+// Single instance lock — focus existing window on second launch
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+}
+
+let mainWindow: BrowserWindow | null = null
+
+function getMainWindow(): BrowserWindow | null {
+  return mainWindow
+}
 
 function createWindow(): void {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 900,
@@ -22,7 +35,17 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow!.show()
+  })
+
+  // Minimize to tray instead of closing
+  mainWindow.on('close', (e) => {
+    e.preventDefault()
+    mainWindow!.hide()
+  })
+
+  mainWindow.on('closed', () => {
+    mainWindow = null
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -38,16 +61,37 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // Remove default application menu
+  Menu.setApplicationMenu(null)
+
   registerDialogHandlers()
   registerFileHandlers()
   registerNcmHandlers()
+
   createWindow()
+  createTray(getMainWindow)
+
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.show()
+      mainWindow.focus()
+    }
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
     }
   })
+})
+
+app.on('before-quit', () => {
+  destroyTray()
+  // Remove close handler so the window can actually close
+  if (mainWindow) {
+    mainWindow.removeAllListeners('close')
+  }
 })
 
 app.on('window-all-closed', () => {
